@@ -1,6 +1,7 @@
 var express = require('express');
 var app = express();
 var fs = require('fs');
+var assert = require('assert');
 var LintStream = require('jslint').LintStream;
 
 var bodyParser = require('body-parser');
@@ -28,18 +29,18 @@ app.post('/upload', function (req, res) {
             if( err ){
                 console.log("Error on writing file at path : %s", filePath);
                 console.log( err );
-            }else{
                 response = {
-                    message:'File uploaded successfully',
-                    filename:req.files[0].filename
+                    message:'Error Happened',
+                    error:err
                 };
+
+                res.end( JSON.stringify( response ) );
+                return;
             }
 
-            checkJsLint(filePath, data);
+            checkJsLint(filePath, data, res);
 
             /*console.log(checkJsHint());*/
-
-            res.end( JSON.stringify( response ) );
         });
     });
 })
@@ -57,7 +58,7 @@ function readFileSync(filePath) {
     return fileString;
 }
 
-function checkJsLint(filePath, data) {
+function checkJsLint(filePath, data, response) {
     var options = {"edition": "latest", "length": 100};
     var lintStream = new LintStream(options);
 
@@ -67,22 +68,42 @@ function checkJsLint(filePath, data) {
 
 
     lintStream.on('data', function (chunk, encoding) {
-        // chunk is an object
 
-        // chunk.file is whatever you supplied to write (see above)
-        /*assert.deepEqual(chunk.file, filePath);*/
+        try {
 
-        // chunk.linted is an object holding the result from running JSLint
-        // chunk.linted.ok is the boolean return code from JSLINT()
-        // chunk.linted.errors is the array of errors, etc.
-        // see JSLINT for the complete contents of the object
+            // chunk is an object
 
-        if (!chunk.linted.ok) {
-            console.log('Error  Status >>>>>>>>>>>>>>>>>>>>>');
-            console.log(chunk.linted.errors);
+            // chunk.file is whatever you supplied to write (see above)
+            assert.deepEqual(chunk.file, filePath);
+
+            // chunk.linted is an object holding the result from running JSLint
+            // chunk.linted.ok is the boolean return code from JSLINT()
+            // chunk.linted.errors is the array of errors, etc.
+            // see JSLINT for the complete contents of the object
+
+            if (chunk.linted.ok) {
+                console.log("Ok");
+                console.log(chunk.linted);
+
+                okMessage = {
+                  status : 'ok'
+                };
+
+                response.end(JSON.stringify(okMessage));
+            } else {
+                console.log(chunk.linted.errors);
+                response.end( JSON.stringify(chunk.linted.errors));
+            }
+        } catch (err) {
+            console.log(err);
+            errorJson = {
+                error:err
+            };
+            response.end( JSON.stringify(errorJson));
+        } finally {
+            removeFileSync(filePath);
         }
 
-        removeFileSync(filePath);
     });
 }
 
@@ -104,8 +125,6 @@ function checkJsHint(data) {
 }
 
 var server = app.listen(8081, function () {
-    var host = server.address().address
-    var port = server.address().port
-
-    console.log("Example app listening at http://%s:%s", host, port)
+    console.log("Server started");
+    console.log(server.address());
 })
