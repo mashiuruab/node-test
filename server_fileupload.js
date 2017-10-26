@@ -1,7 +1,6 @@
 var express = require('express');
 var app = express();
 var fs = require('fs');
-const uuidV1 = require('uuid/v1');
 var LintStream = require('jslint').LintStream;
 
 var bodyParser = require('body-parser');
@@ -14,14 +13,20 @@ app.use(multer({ dest: '/tmp/'}).any());
 /*'file' this should be key  from HTTP client
 curl -X POST -F "file=@test.js" -F "file=@test.js" http://localhost:8081/upload/
 * */
-app.post('/upload', function (req, res) {
-    console.log(req.files);
 
-    var file = __dirname + "/" + req.files[0].filename;
+app.post('/upload', function (req, res) {
+    var filePath = __dirname + "/" + req.files[0].filename;
 
     fs.readFile( req.files[0].path, function (err, data) {
-        fs.writeFile(file, data, function (err) {
+        if (err) {
+            console.log("Error On Reading file %s", req.files[0].path);
+            console.log(err);
+            return;
+        }
+
+        fs.writeFile(filePath, data, function (err) {
             if( err ){
+                console.log("Error on writing file at path : %s", filePath);
                 console.log( err );
             }else{
                 response = {
@@ -29,8 +34,9 @@ app.post('/upload', function (req, res) {
                     filename:req.files[0].filename
                 };
             }
-            console.log( response );
-            checkJsLint(req.files[0].filename, data)
+
+            checkJsLint(filePath, data);
+
             /*console.log(checkJsHint());*/
 
             res.end( JSON.stringify( response ) );
@@ -39,32 +45,47 @@ app.post('/upload', function (req, res) {
 })
 
 
-function checkJsLint(fileName, data) {
+function removeFileSync(filePath) {
+    const fs = require('fs');
+
+    fs.unlinkSync(filePath);
+    console.log('successfully deleted %s', filePath);
+}
+
+function readFileSync(filePath) {
+    var fileString = fs.readFileSync(filePath, "utf8");
+    return fileString;
+}
+
+function checkJsLint(filePath, data) {
     var options = {"edition": "latest", "length": 100};
-    var l = new LintStream(options);
+    var lintStream = new LintStream(options);
 
-    console.log(fileName);
-    console.log(data);
+    var fileContent = readFileSync(filePath);
 
-    l.write({file: fileName, body: 'function test(a, b) {return a + b;}'});
+    lintStream.write({file: filePath, body: fileContent});
 
 
-    l.on('data', function (chunk, encoding) {
+    lintStream.on('data', function (chunk, encoding) {
         // chunk is an object
 
         // chunk.file is whatever you supplied to write (see above)
-        /*assert.deepEqual(chunk.file, fileName);*/
+        /*assert.deepEqual(chunk.file, filePath);*/
 
         // chunk.linted is an object holding the result from running JSLint
         // chunk.linted.ok is the boolean return code from JSLINT()
         // chunk.linted.errors is the array of errors, etc.
         // see JSLINT for the complete contents of the object
 
-        console.log(chunk.linted);
-        console.log(chunk.linted.ok);
-        console.log(chunk.linted.errors)
+        if (!chunk.linted.ok) {
+            console.log('Error  Status >>>>>>>>>>>>>>>>>>>>>');
+            console.log(chunk.linted.errors);
+        }
+
+        removeFileSync(filePath);
     });
 }
+
 function checkJsHint(data) {
     var source = [
         'function goo() {}',
