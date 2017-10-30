@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Test</title>
+    <script src="jquery-3.2.1.min.js"></script>
+    <script src="simpleUpload.min.js"></script>
+    <script src="jquery.json-viewer.js"></script>
+    <link href="jquery.json-viewer.css" type="text/css" rel="stylesheet">
+
+    <script type="text/javascript">
+
+        $(document).ready(function(){
+
+            $('input[type=file]').change(function(){
+
+                $(this).simpleUpload("/ui/upload", {
+
+                    start: function(file){
+                        //upload started
+                        $('#filename').html(file.name);
+                        $('#progress').html("");
+                        $('#progressBar').width(0);
+                    },
+
+                    progress: function(progress){
+                        //received progress
+                        $('#progress').html("Progress: " + Math.round(progress) + "%");
+                        $('#progressBar').width(progress + "%");
+                    },
+
+                    success: function(data){
+                        //upload successful
+                        var dataObj = JSON.parse(data);
+
+                        $('.js-lint').jsonViewer(dataObj, {collapsed: true, withQuotes: true});
+                    },
+
+                    error: function(error){
+                        //upload failed
+                        $('#progress').html("Failure!<br>" + error.name + ": " + error.message);
+                    }
+
+                });
+
+            });
+
+        });
+
+    </script>
+</head>
+<body>
+
+<div id="filename"></div>
+<div id="progress"></div>
+<div id="progressBar"></div>
+
+<pre id="json-renderer" class="js-lint"></pre>
+
+<input type="file" name="file">
+
+</body>
+</html>

@@ -92,7 +92,7 @@ function checkJsLint(filePath, data, response) {
                 response.end(JSON.stringify(okMessage));
             } else {
                 console.log(chunk.linted.errors);
-                response.end( JSON.stringify(chunk.linted.errors));
+                response.end(JSON.stringify(chunk.linted.errors));
             }
         } catch (err) {
             console.log(err);
@@ -124,7 +124,7 @@ function checkJsHint(data) {
     console.log(JSHINT.data());
 }
 
-var server = app.listen(8081, function () {
+var server = app.listen(8080, function () {
     console.log("Server started");
     console.log(server.address());
 })
