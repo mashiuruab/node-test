@@ -2,6 +2,7 @@ var express = require('express');
 var app = express();
 var fs = require('fs');
 var request = require('request');
+var async = require('async');
 var PropertiesReader = require('properties-reader');
 var properties = PropertiesReader('config.properties');
 
@@ -59,6 +60,18 @@ function readFileSync(filePath) {
     return fileString;
 }
 
+function httpPost(urlOptions, callback) {
+    request.post(urlOptions,
+
+        function optionalCallback(err, httpResponse, body) {
+            if (err) {
+                console.error('upload failed:', err);
+                return;
+            }
+            callback(httpResponse, body)
+        });
+}
+
 function postSrcFile(filepath, response) {
     var formData = {
         file: fs.createReadStream(filepath),
@@ -67,24 +80,38 @@ function postSrcFile(filepath, response) {
     var jslintServerAddress = properties.get('server.jslint');
     var jslintUri = jslintServerAddress + "/upload";
 
-    request.post(
-            {url: jslintUri, formData: formData},
+    var jshintServerAddress =  properties.get('server.jshint');
+    var jshintUri = jshintServerAddress + "/upload";
 
-            function optionalCallback(err, httpResponse, body) {
-                if (err) {
-                    return console.error('upload failed:', err);
-                }
-                console.log('Upload successful!  Server responded with:', body);
+    var serverUrlsWithOptions = [
+        {url : jslintUri, formData: formData},
+        {url : jshintUri, formData: formData}
+        ];
 
-                removeFileSync(filepath);
+    var responses = [];
+    var completed_request = 0;
 
-                respMessage = {
-                    status : 'ok',
-                    msg : JSON.parse(body)
-                };
+    async.map(serverUrlsWithOptions, httpPost, function (httpResponse, body) {
+        console.log('Upload successful!  Server responded with:', body);
 
-                response.end(JSON.stringify(respMessage));
-            });
+        responses.push(JSON.parse(body));
+
+        completed_request++;
+
+        if (completed_request == serverUrlsWithOptions.length) {
+            removeFileSync(filepath);
+
+            respMessage = {
+                status : 'ok',
+                msg : responses
+            };
+
+            response.end(JSON.stringify(respMessage));
+        } else {
+            console.log("completed_request = %s and  length = %s",
+                completed_request, serverUrlsWithOptions.length)
+        }
+    })
 }
 
 var server = app.listen(8082, function () {
