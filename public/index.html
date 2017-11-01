@@ -8,6 +8,10 @@
     <script src="jquery.json-viewer.js"></script>
     <link href="jquery.json-viewer.css" type="text/css" rel="stylesheet">
 
+    <!--highlightjs-->
+    <link rel="stylesheet"
+          href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css">
+    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
     <script type="text/javascript">
 
         $(document).ready(function(){
@@ -18,15 +22,24 @@
 
                     start: function(file){
                         //upload started
-                        $('#filename').html(file.name);
-                        $('#progress').html("");
-                        $('#progressBar').width(0);
+
+                        var reader = new FileReader();
+                        reader.readAsText(file, "UTF-8");
+                        reader.onload = function (evt) {
+                            $('.js').html(evt.target.result);
+                            $('pre code').each(function(i, block) {
+                                hljs.highlightBlock(block);
+                            });
+                        };
+
+                        reader.onerror = function (evt) {
+                            $('.js').html("Error reading file");
+                        };
+
                     },
 
                     progress: function(progress){
                         //received progress
-                        $('#progress').html("Progress: " + Math.round(progress) + "%");
-                        $('#progressBar').width(progress + "%");
                     },
 
                     success: function(data){
@@ -38,7 +51,7 @@
 
                     error: function(error){
                         //upload failed
-                        $('#progress').html("Failure!<br>" + error.name + ": " + error.message);
+                        $('#error').html("Failure!<br>" + error.name + ": " + error.message);
                     }
 
                 });
@@ -51,13 +64,11 @@
 </head>
 <body>
 
-<div id="filename"></div>
-<div id="progress"></div>
-<div id="progressBar"></div>
+<div id="error"></div>
 
-<pre id="json-renderer">
-    <div class="js-lint"></div>
-</pre>
+<pre><code class="js"></code></pre>
+
+<pre id="json-renderer"><code class="js-lint"></code></pre>
 
 <input id="jsFileID" type="file" name="file">
 

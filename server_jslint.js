@@ -39,8 +39,6 @@ app.post('/upload', function (req, res) {
             }
 
             checkJsLint(filePath, data, res);
-
-            /*console.log(checkJsHint());*/
         });
     });
 })
@@ -92,8 +90,6 @@ function checkJsLint(filePath, data, response) {
 
                 response.end(JSON.stringify(okMessage));
             } else {
-                console.log(chunk.linted.errors);
-
                 errorMessage = {
                     status : 'error',
                     tool : 'jslint',
@@ -113,23 +109,6 @@ function checkJsLint(filePath, data, response) {
         }
 
     });
-}
-
-function checkJsHint(data) {
-    var source = [
-        'function goo() {}',
-        'foo = 3;'
-    ];
-    var options = {
-        undef: true
-    };
-    var predef = {
-        foo: false
-    };
-
-    JSHINT.jshint(source, options, predef)
-
-    console.log(JSHINT.data());
 }
 
 var server = app.listen(8080, function () {

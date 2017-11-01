@@ -80,7 +80,6 @@ function checkJsHint(filePath, response) {
     jshint(source, options, predef)
 
     if (jshint.errors && jshint.errors.length > 0) {
-        console.log(jshint.errors);
         var respObj = {
             status : 'error',
             tool : 'jshint',

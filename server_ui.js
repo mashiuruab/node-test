@@ -55,16 +55,10 @@ function removeFileSync(filePath) {
     console.log('successfully deleted %s', filePath);
 }
 
-function readFileSync(filePath) {
-    var fileString = fs.readFileSync(filePath, "utf8");
-    return fileString;
-}
-
 function httpPost(urlOptions, callback) {
     request.post(urlOptions,
 
         function optionalCallback(err, httpResponse, body) {
-            console.log(urlOptions);
             callback(err, JSON.parse(body));
         });
 }
