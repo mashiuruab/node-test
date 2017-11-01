@@ -83,12 +83,14 @@ function checkJsHint(filePath, response) {
         console.log(jshint.errors);
         var respObj = {
             status : 'error',
+            tool : 'jshint',
             error  : jshint.errors
         };
         response.end( JSON.stringify(respObj));
     } else {
         var respObj = {
-            status : "ok"
+            status : "ok",
+            tool : 'jshint'
         }
 
         response.end( JSON.stringify(respObj));

@@ -86,18 +86,26 @@ function checkJsLint(filePath, data, response) {
                 console.log(chunk.linted);
 
                 okMessage = {
-                  status : 'ok'
+                    status : 'ok',
+                    tool : 'jslint'
                 };
 
                 response.end(JSON.stringify(okMessage));
             } else {
                 console.log(chunk.linted.errors);
-                response.end(JSON.stringify(chunk.linted.errors));
+
+                errorMessage = {
+                    status : 'error',
+                    tool : 'jslint',
+                    error : chunk.linted.errors
+                };
+                response.end(JSON.stringify(errorMessage));
             }
         } catch (err) {
             console.log(err);
             errorJson = {
-                error:err
+                error:err,
+                tool : 'jslint'
             };
             response.end( JSON.stringify(errorJson));
         } finally {

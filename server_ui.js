@@ -64,13 +64,11 @@ function httpPost(urlOptions, callback) {
     request.post(urlOptions,
 
         function optionalCallback(err, httpResponse, body) {
-            if (err) {
-                console.error('upload failed:', err);
-                return;
-            }
-            callback(httpResponse, body)
+            console.log(urlOptions);
+            callback(err, JSON.parse(body));
         });
 }
+
 
 function postSrcFile(filepath, response) {
     var formData = {
@@ -88,29 +86,22 @@ function postSrcFile(filepath, response) {
         {url : jshintUri, formData: formData}
         ];
 
-    var responses = [];
-    var completed_request = 0;
+    async.map(serverUrlsWithOptions, httpPost, function (err, result) {
 
-    async.map(serverUrlsWithOptions, httpPost, function (httpResponse, body) {
-        console.log('Upload successful!  Server responded with:', body);
-
-        responses.push(JSON.parse(body));
-
-        completed_request++;
-
-        if (completed_request == serverUrlsWithOptions.length) {
-            removeFileSync(filepath);
-
-            respMessage = {
-                status : 'ok',
-                msg : responses
-            };
-
-            response.end(JSON.stringify(respMessage));
-        } else {
-            console.log("completed_request = %s and  length = %s",
-                completed_request, serverUrlsWithOptions.length)
+        if (err) {
+            console.log("Error Happened ", err);
+            return;
         }
+
+        removeFileSync(filepath);
+
+        respMessage = {
+            status : 'ok',
+            msg : result
+        };
+
+        response.end(JSON.stringify(respMessage));
+
     })
 }
 
