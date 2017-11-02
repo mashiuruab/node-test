@@ -7,6 +7,15 @@ var LintStream = require('jslint').LintStream;
 var bodyParser = require('body-parser');
 var multer  = require('multer');
 
+app.use(function (req, res, next) {
+
+    // Website you wish to allow to connect
+    res.setHeader('Access-Control-Allow-Origin', '*');
+
+
+    // Pass to next layer of middleware
+    next();
+});
 app.use(express.static('public'));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(multer({ dest: '/tmp/'}).any());
@@ -80,9 +89,6 @@ function checkJsLint(filePath, data, response) {
             // see JSLINT for the complete contents of the object
 
             if (chunk.linted.ok) {
-                console.log("Ok");
-                console.log(chunk.linted);
-
                 okMessage = {
                     status : 'ok',
                     tool : 'jslint'

@@ -6,6 +6,16 @@ var jshint = require('jshint').JSHINT;
 var bodyParser = require('body-parser');
 var multer  = require('multer');
 
+app.use(function (req, res, next) {
+
+    // Website you wish to allow to connect
+    res.setHeader('Access-Control-Allow-Origin', '*');
+
+
+    // Pass to next layer of middleware
+    next();
+});
+
 app.use(express.static('public'));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(multer({ dest: '/tmp/'}).any());

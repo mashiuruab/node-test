@@ -14,63 +14,103 @@
     <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
     <script type="text/javascript">
 
+        var results = [];
+
+        function displayFileContent(file) {
+            var reader = new FileReader();
+            reader.readAsText(file, "UTF-8");
+            reader.onload = function (evt) {
+                $('.js').html(evt.target.result);
+                $('pre code').each(function(i, block) {
+                    hljs.highlightBlock(block);
+                });
+            };
+
+            reader.onerror = function (evt) {
+                $('.js').html("Error reading file");
+            };
+        }
+
+        function downLoadResult() {
+            var responseString  = 'data:application/octet-stream;charset=utf-8,' + JSON.stringify(results);
+            var encodedUri = encodeURI(responseString);
+            var link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "result.json");
+            document.body.appendChild(link); // Required for FF
+
+            link.click(); // This will download the data file named "my_data.csv".
+        }
+
         $(document).ready(function(){
+            $('input[type=file]').change(function() {
+                var objFormData = new FormData();
+                // GET FILE OBJECT
+                var objFile = $(this)[0].files[0];
+                // APPEND FILE TO POST DATA
+                displayFileContent(objFile);
 
-            $('input[type=file]').change(function(){
-
-                $(this).simpleUpload("/ui/upload", {
-
-                    start: function(file){
-                        //upload started
-
-                        var reader = new FileReader();
-                        reader.readAsText(file, "UTF-8");
-                        reader.onload = function (evt) {
-                            $('.js').html(evt.target.result);
-                            $('pre code').each(function(i, block) {
-                                hljs.highlightBlock(block);
-                            });
-                        };
-
-                        reader.onerror = function (evt) {
-                            $('.js').html("Error reading file");
-                        };
-
-                    },
-
-                    progress: function(progress){
-                        //received progress
-                    },
-
-                    success: function(data){
-                        //upload successful
+                objFormData.append('file', objFile);
+                $.ajax({
+                    /*jslint*/
+                    url: 'http://localhost:8080/upload',
+                    type: 'POST',
+                    contentType: false,
+                    data: objFormData,
+                    //JQUERY CONVERT THE FILES ARRAYS INTO STRINGS.SO processData:false
+                    processData: false,
+                    success: function(data) {
                         var dataObj = JSON.parse(data);
-
+                        results.push(dataObj);
                         $('.js-lint').jsonViewer(dataObj, {collapsed: true, withQuotes: true});
-                    },
-
-                    error: function(error){
-                        //upload failed
-                        $('#error').html("Failure!<br>" + error.name + ": " + error.message);
+                        $('.results-container .resultsCls').removeClass('hide');
                     }
-
                 });
 
+                $.ajax({
+                    /*jshint*/
+                    url: 'http://localhost:8081/upload',
+                    type: 'POST',
+                    contentType: false,
+                    data: objFormData,
+                    //JQUERY CONVERT THE FILES ARRAYS INTO STRINGS.SO processData:false
+                    processData: false,
+                    success: function(data) {
+                        var dataObj = JSON.parse(data);
+                        results.push(dataObj);
+
+                        $('.js-hint').jsonViewer(dataObj, {collapsed: true, withQuotes: true});
+                        $('.results-container .resultsCls').removeClass('hide');
+                    }
+                });
             });
 
         });
 
     </script>
+
+    <style>
+        .results-container .resultsCls.hide {
+            display: none;
+        }
+    </style>
 </head>
 <body>
+<div class="data-container">
+    <input id="jsFileID" type="file" name="file">
 
-<div id="error"></div>
+    <div id="error"></div>
 
-<pre><code class="js"></code></pre>
+    <pre><code class="js"></code></pre>
 
-<pre id="json-renderer"><code class="js-lint"></code></pre>
+    <pre id="json-renderer"><code class="js-lint"></code><code class="js-hint"></code></pre>
 
-<input id="jsFileID" type="file" name="file">
+</div>
+<div class="results-container">
+    <span>
+        <a href="#" class="resultsCls hide" onclick="downLoadResult()">Results</a>
+    </span>
+</div>
 
 </body>
 </html>
