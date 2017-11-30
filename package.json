@@ -17,6 +17,7 @@
     "jslint": "^0.11.0",
     "multer": "^1.3.0",
     "properties-reader": "0.0.16",
-    "request": "^2.83.0"
+    "request": "^2.83.0",
+    "scanjs": "^1.1.4"
   }
 }
