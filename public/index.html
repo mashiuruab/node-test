@@ -61,6 +61,25 @@
                     processData: false,
                     success: function(data) {
                         var dataObj = JSON.parse(data);
+                        if (dataObj.error) {
+                            console.log("testing..........");
+
+                            var jsLintResult = {};
+                            for(var i = 0; i < dataObj.error.length; ++i)
+                            {
+                                if (jsLintResult[dataObj.error[i].line]) {
+                                    var prev = jsLintResult[dataObj.error[i].line];
+                                    jsLintResult[dataObj.error[i].line] = prev + ',' + dataObj.error[i].message;
+                                } else {
+                                    jsLintResult[dataObj.error[i].line] = dataObj.error[i].message;
+                                }
+
+                            }
+
+                            console.log('jslint result ......');
+                            console.log(jsLintResult)
+
+                        }
                         results.push(dataObj);
                         $('.js-lint').jsonViewer(dataObj, {collapsed: true, withQuotes: true});
                         $('.results-container .resultsCls').removeClass('hide');
@@ -94,6 +113,31 @@
                     processData: false,
                     success: function(data) {
                         var dataObj = JSON.parse(data);
+
+                        var esLintResult = {};
+
+                        if (dataObj.result && dataObj.result.results) {
+                            console.log("testing..........");
+
+                            for(var iCounter = 0; iCounter < dataObj.result.results.length; ++iCounter)
+                            {
+                                var messages = dataObj.result.results[iCounter].messages;
+                                for(var jCounter = 0; jCounter < messages.length; jCounter++) {
+                                    if (esLintResult[messages[jCounter].line]) {
+                                        var prev =  esLintResult[messages[jCounter].line];
+                                        esLintResult[messages[jCounter].line] = prev + ', '
+                                            + messages[jCounter].message;
+                                    } else {
+                                        esLintResult[messages[jCounter].line] = messages[jCounter].message;
+                                    }
+                                }
+
+                            }
+
+                            console.log('es-lint result ......');
+                            console.log(esLintResult)
+
+                        }
                         results.push(dataObj);
 
                         $('.es-lint').jsonViewer(dataObj, {collapsed: true, withQuotes: true});
