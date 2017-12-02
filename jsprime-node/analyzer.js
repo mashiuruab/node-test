@@ -30,6 +30,10 @@ var endScope = [];
 
 var res;
 
+var color_things = { "yellow" :  "Active Source asigned to variables", "LightPink" : "Active Source passed through a function", "BurlyWood": "Source that missed the Sink", "grey" : "Non-Active Source asigned to variables", "red" : "Active Source reached the Sink", "orange" : "Source that reached the Sink"};
+
+var bad_things = {}
+
 exports.sink = sink;
 exports.analyzeArrays = analyzeArrays;
 
@@ -110,10 +114,19 @@ function writeResult() {
   for (var i = 0; i < sourceData.length; i++) {
     res.write((i + 1) + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" + sourceData[i] + "</br>");
   }
+
+  for (var l in bad_things) {
+    res.write(l + " " + bad_things[l] + "</br>");
+  }
+
+  res.write(JSON.stringify(bad_things))
 }
 
 function doHighlight(color, line) {
   sourceData[line - 1] = '<span style="background: none repeat scroll 0% 0% ' + color + ';">' + sourceDataOld[line - 1] + "</span>";
+  //sourceData[line - 1] = color + ' ' + line;
+  bad_things[line] = color_things[color];
+
   //win.document.writeln(sourceData[line-1]+" ---- "+(line-1)+"</br>");
 }
 
