@@ -67,7 +67,7 @@ function readFileSync(filePath) {
 function checkESLint(filePath, data, response) {
     var cli = new CLIEngine({
         envs: ["browser", "mocha"],
-        useEslintrc: false,
+        useEslintrc: true,
         extends: "eslint:recommended",
         rules: {
             semi: 2
