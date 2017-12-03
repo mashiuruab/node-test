@@ -15,6 +15,8 @@
     <script type="text/javascript">
 
         var results = [];
+        var formatedResult = {};
+        var completed = 0;
 
         function displayFileContent(file) {
             var reader = new FileReader();
@@ -41,6 +43,37 @@
 
             link.click(); // This will download the data file named "my_data.csv".
         }
+        
+        function showAccumulatedResult() {
+            var finalJson = {};
+
+            $.each(formatedResult.jslint, function(k, v) {
+                console.log(k);
+                finalJson[k] = {};
+                finalJson[k].count = 1;
+                finalJson[k].tools = ['jslint'];
+                finalJson[k].details = {};
+                finalJson[k].details.jslint = v;
+
+            });
+
+            $.each(formatedResult.eslint, function(k, v) {
+                console.log(k);
+                if(finalJson[k]) {
+                    finalJson[k].count = finalJson[k].count + 1;
+                    finalJson[k].tools.push('eslint');
+                    finalJson[k].details.eslint = v;
+                } else {
+                    finalJson[k] = {};
+                    finalJson[k].count = 1;
+                    finalJson[k].tools = ['eslint'];
+                    finalJson[k].details = {};
+                    finalJson[k].details.eslint = v;
+                }
+            });
+
+            $('.accumulated').jsonViewer(finalJson, {collapsed: true, withQuotes: true});
+        }
 
         $(document).ready(function(){
             $('input[type=file]').change(function() {
@@ -62,7 +95,6 @@
                     success: function(data) {
                         var dataObj = JSON.parse(data);
                         if (dataObj.error) {
-                            console.log("testing..........");
 
                             var jsLintResult = {};
                             for(var i = 0; i < dataObj.error.length; ++i)
@@ -76,13 +108,19 @@
 
                             }
 
-                            console.log('jslint result ......');
-                            console.log(jsLintResult)
+                            formatedResult.jslint = jsLintResult;
 
                         }
                         results.push(dataObj);
                         $('.js-lint').jsonViewer(dataObj, {collapsed: true, withQuotes: true});
                         $('.results-container .resultsCls').removeClass('hide');
+                    },
+
+                    complete: function(data) {
+                        completed++;
+                        if (completed == 2) {
+                            showAccumulatedResult();
+                        }
                     }
                 });
 
@@ -117,7 +155,6 @@
                         var esLintResult = {};
 
                         if (dataObj.result && dataObj.result.results) {
-                            console.log("testing..........");
 
                             for(var iCounter = 0; iCounter < dataObj.result.results.length; ++iCounter)
                             {
@@ -134,14 +171,20 @@
 
                             }
 
-                            console.log('es-lint result ......');
-                            console.log(esLintResult)
+                            formatedResult['eslint'] = esLintResult;
 
                         }
+
                         results.push(dataObj);
 
                         $('.es-lint').jsonViewer(dataObj, {collapsed: true, withQuotes: true});
                         $('.results-container .resultsCls').removeClass('hide');
+                    },
+                    complete: function(data) {
+                        completed++;
+                        if (completed == 2) {
+                            showAccumulatedResult();
+                        }
                     }
                 });
             });
@@ -164,7 +207,7 @@
 
     <pre><code class="js"></code></pre>
 
-    <pre id="json-renderer"><code class="js-lint"></code><code class="js-hint"></code><code class="es-lint"></code></pre>
+    <pre id="json-renderer"><code class="js-lint"></code><code class="js-hint"></code><code class="es-lint"></code><code class="accumulated"></code></pre>
 
 </div>
 <div class="results-container">
