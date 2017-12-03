@@ -15,6 +15,8 @@
     <script type="text/javascript">
 
         var results = [];
+        var formatedResult = {};
+        var completed = 0;
 
         function displayFileContent(file) {
             var reader = new FileReader();
@@ -41,6 +43,50 @@
 
             link.click(); // This will download the data file named "my_data.csv".
         }
+        
+        function showAccumulatedResult() {
+            var finalJson = {};
+
+            $.each(formatedResult.jslint, function(k, v) {
+                finalJson[k] = {};
+                finalJson[k].count = 1;
+                finalJson[k].tools = ['jslint'];
+                finalJson[k].details = {};
+                finalJson[k].details.jslint = v;
+
+            });
+
+            $.each(formatedResult.eslint, function(k, v) {
+                if(finalJson[k]) {
+                    finalJson[k].count = finalJson[k].count + 1;
+                    finalJson[k].tools.push('eslint');
+                    finalJson[k].details.eslint = v;
+                } else {
+                    finalJson[k] = {};
+                    finalJson[k].count = 1;
+                    finalJson[k].tools = ['eslint'];
+                    finalJson[k].details = {};
+                    finalJson[k].details.eslint = v;
+                }
+            });
+
+            $.each(formatedResult.jshint, function(k, v) {
+                if(finalJson[k]) {
+                    finalJson[k].count = finalJson[k].count + 1;
+                    finalJson[k].tools.push('jshint');
+                    finalJson[k].details.jshint = v;
+                } else {
+                    finalJson[k] = {};
+                    finalJson[k].count = 1;
+                    finalJson[k].tools = ['jshint'];
+                    finalJson[k].details = {};
+                    finalJson[k].details.jshint = v;
+                }
+            });
+
+            $('.accumulated').jsonViewer(finalJson, {collapsed: true, withQuotes: true});
+            $('.acc-container').removeClass('hide');
+        }
 
         $(document).ready(function(){
             $('input[type=file]').change(function() {
@@ -61,9 +107,33 @@
                     processData: false,
                     success: function(data) {
                         var dataObj = JSON.parse(data);
+                        if (dataObj.error) {
+
+                            var jsLintResult = {};
+                            for(var i = 0; i < dataObj.error.length; ++i)
+                            {
+                                if (jsLintResult[dataObj.error[i].line]) {
+                                    var prev = jsLintResult[dataObj.error[i].line];
+                                    jsLintResult[dataObj.error[i].line] = prev + ',' + dataObj.error[i].message;
+                                } else {
+                                    jsLintResult[dataObj.error[i].line] = dataObj.error[i].message;
+                                }
+
+                            }
+
+                            formatedResult.jslint = jsLintResult;
+
+                        }
                         results.push(dataObj);
                         $('.js-lint').jsonViewer(dataObj, {collapsed: true, withQuotes: true});
                         $('.results-container .resultsCls').removeClass('hide');
+                    },
+
+                    complete: function(data) {
+                        completed++;
+                        if (completed == 3) {
+                            showAccumulatedResult();
+                        }
                     }
                 });
 
@@ -77,10 +147,34 @@
                     processData: false,
                     success: function(data) {
                         var dataObj = JSON.parse(data);
+
+                        if (dataObj.error) {
+
+                            var jsHintResult = {};
+                            for(var i = 0; i < dataObj.error.length; ++i)
+                            {
+                                if (jsHintResult[dataObj.error[i].line]) {
+                                    var prev = jsHintResult[dataObj.error[i].line];
+                                    jsHintResult[dataObj.error[i].line] = prev + ',' + dataObj.error[i].reason;
+                                } else {
+                                    jsHintResult[dataObj.error[i].line] = dataObj.error[i].reason;
+                                }
+
+                            }
+
+                            formatedResult.jshint = jsHintResult;
+
+                        }
+
                         results.push(dataObj);
 
                         $('.js-hint').jsonViewer(dataObj, {collapsed: true, withQuotes: true});
                         $('.results-container .resultsCls').removeClass('hide');
+                    }, complete: function(data) {
+                        completed++;
+                        if (completed == 3) {
+                            showAccumulatedResult();
+                        }
                     }
                 });
 
@@ -94,10 +188,40 @@
                     processData: false,
                     success: function(data) {
                         var dataObj = JSON.parse(data);
+
+                        var esLintResult = {};
+
+                        if (dataObj.result && dataObj.result.results) {
+
+                            for(var iCounter = 0; iCounter < dataObj.result.results.length; ++iCounter)
+                            {
+                                var messages = dataObj.result.results[iCounter].messages;
+                                for(var jCounter = 0; jCounter < messages.length; jCounter++) {
+                                    if (esLintResult[messages[jCounter].line]) {
+                                        var prev =  esLintResult[messages[jCounter].line];
+                                        esLintResult[messages[jCounter].line] = prev + ', '
+                                            + messages[jCounter].message;
+                                    } else {
+                                        esLintResult[messages[jCounter].line] = messages[jCounter].message;
+                                    }
+                                }
+
+                            }
+
+                            formatedResult['eslint'] = esLintResult;
+
+                        }
+
                         results.push(dataObj);
 
                         $('.es-lint').jsonViewer(dataObj, {collapsed: true, withQuotes: true});
                         $('.results-container .resultsCls').removeClass('hide');
+                    },
+                    complete: function(data) {
+                        completed++;
+                        if (completed == 3) {
+                            showAccumulatedResult();
+                        }
                     }
                 });
             });
@@ -107,7 +231,7 @@
     </script>
 
     <style>
-        .results-container .resultsCls.hide {
+        .results-container .resultsCls.hide, .acc-container.hide {
             display: none;
         }
     </style>
@@ -122,6 +246,11 @@
 
     <pre id="json-renderer"><code class="js-lint"></code><code class="js-hint"></code><code class="es-lint"></code></pre>
 
+</div>
+
+<div class="acc-container hide">
+    <span>Accumulated Result</span>
+    <pre id="json-renderer1"><code class="accumulated"></code></pre>
 </div>
 <div class="results-container">
     <span>
