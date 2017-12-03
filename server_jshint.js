@@ -49,7 +49,8 @@ app.post('/upload', function (request, response) {
 
 
             try {
-                checkJsHint(filePath, response);
+                var input = fs.createReadStream(filePath);
+                readLines(input, response, checkJsHint);
             } catch (err) {
                 console.log(err);
             } finally {
@@ -72,12 +73,31 @@ function readFileSync(filePath) {
     return fileString;
 }
 
-function checkJsHint(filePath, response) {
-    var fileContent = readFileSync(filePath);
 
-    var source = [
-        fileContent
-    ];
+function readLines(input, response, callback) {
+    var remaining = '';
+    var source = [];
+
+    input.on('data', function(data) {
+        remaining += data;
+        var index = remaining.indexOf('\n');
+        while (index > -1) {
+            var line = remaining.substring(0, index);
+            remaining = remaining.substring(index + 1);
+            source.push(line);
+            index = remaining.indexOf('\n');
+        }
+    });
+
+    input.on('end', function() {
+        if (remaining.length > 0) {
+            source.push(remaining);
+        }
+        callback(source, response);
+    });
+}
+
+function checkJsHint(source, response) {
     var options = {
         undef: true,
         /*'-W100': true,
@@ -87,7 +107,7 @@ function checkJsHint(filePath, response) {
         foo: false
     };
 
-    jshint(source, options, predef)
+    jshint(source, options, predef);
 
     if (jshint.errors && jshint.errors.length > 0) {
         var respObj = {
@@ -100,7 +120,7 @@ function checkJsHint(filePath, response) {
         var respObj = {
             status : "ok",
             tool : 'jshint'
-        }
+        };
 
         response.end( JSON.stringify(respObj));
     }

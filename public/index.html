@@ -57,7 +57,6 @@
             });
 
             $.each(formatedResult.eslint, function(k, v) {
-                console.log(k);
                 if(finalJson[k]) {
                     finalJson[k].count = finalJson[k].count + 1;
                     finalJson[k].tools.push('eslint');
@@ -68,6 +67,20 @@
                     finalJson[k].tools = ['eslint'];
                     finalJson[k].details = {};
                     finalJson[k].details.eslint = v;
+                }
+            });
+
+            $.each(formatedResult.jshint, function(k, v) {
+                if(finalJson[k]) {
+                    finalJson[k].count = finalJson[k].count + 1;
+                    finalJson[k].tools.push('jshint');
+                    finalJson[k].details.jshint = v;
+                } else {
+                    finalJson[k] = {};
+                    finalJson[k].count = 1;
+                    finalJson[k].tools = ['jshint'];
+                    finalJson[k].details = {};
+                    finalJson[k].details.jshint = v;
                 }
             });
 
@@ -118,7 +131,7 @@
 
                     complete: function(data) {
                         completed++;
-                        if (completed == 2) {
+                        if (completed == 3) {
                             showAccumulatedResult();
                         }
                     }
@@ -134,10 +147,34 @@
                     processData: false,
                     success: function(data) {
                         var dataObj = JSON.parse(data);
+
+                        if (dataObj.error) {
+
+                            var jsHintResult = {};
+                            for(var i = 0; i < dataObj.error.length; ++i)
+                            {
+                                if (jsHintResult[dataObj.error[i].line]) {
+                                    var prev = jsHintResult[dataObj.error[i].line];
+                                    jsHintResult[dataObj.error[i].line] = prev + ',' + dataObj.error[i].reason;
+                                } else {
+                                    jsHintResult[dataObj.error[i].line] = dataObj.error[i].reason;
+                                }
+
+                            }
+
+                            formatedResult.jshint = jsHintResult;
+
+                        }
+
                         results.push(dataObj);
 
                         $('.js-hint').jsonViewer(dataObj, {collapsed: true, withQuotes: true});
                         $('.results-container .resultsCls').removeClass('hide');
+                    }, complete: function(data) {
+                        completed++;
+                        if (completed == 3) {
+                            showAccumulatedResult();
+                        }
                     }
                 });
 
@@ -182,7 +219,7 @@
                     },
                     complete: function(data) {
                         completed++;
-                        if (completed == 2) {
+                        if (completed == 3) {
                             showAccumulatedResult();
                         }
                     }
