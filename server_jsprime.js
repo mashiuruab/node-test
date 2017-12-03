@@ -1,116 +1,99 @@
-var express = require('express');
-var app = express();
+
+var http = require('http');
 var fs = require('fs');
-
-var bodyParser = require('body-parser');
-var multer  = require('multer');
-
-var http = require('http'),
-fs = require('fs');
 var querystring = require('querystring');
-var esprima = require('./jsprime-node/esprima.js');
-var engine = require('./jsprime-node/engine.js');
-var analyzer = require('./jsprime-node/analyzer.js');
-
-app.use(function (req, res, next) {
-
-    // Website you wish to allow to connect
-    res.setHeader('Access-Control-Allow-Origin', '*');
+var esprima = require('./esprima.js');
+var engine = require('./engine.js');
+var analyzer = require('./analyzer.js');
+var formidable = require('formidable');
 
 
-    // Pass to next layer of middleware
-    next();
-});
+fs.readFile('./test.html', function (err, html) {
+    if (err) {
+        throw err;
+    }
+    http.createServer(function (req, res) {
+
+        switch (req.url) {
+            case '/':
+                res.writeHeader(200, {
+                    "Content-Type": "text/html"
+                });
+                // res.write(html);
+                res.writeHead(200, {'Content-Type': 'text/html'});
+                res.write('<form action="fileupload" method="post" enctype="multipart/form-data">');
+                res.write('<input type="file" name="filetoupload"><br>');
+                res.write('<input type="submit">');
+                res.write('</form>');
+                return res.end();
+                res.end();
+                break;
+            case '/fileupload':
+                var form = new formidable.IncomingForm();
+                form.parse(req, function (err, fields, files) {
+                    // console.log(files);
+                    fs.readFile(files.filetoupload.path, 'utf8', function (err, data) {
+                        res.writeHead(200, "OK", {
+                            'Content-Type': 'application/json'
+                        });
+                        var code = data;
+                        var options = {
+                            loc: true,
+                            comment: false,
+                            raw: false,
+                            range: false,
+                            tolerant: false
+                        };
 
 
+                        var result = esprima.parse(code, options);
+                        var str_result = JSON.stringify(result, null, 4);
+                        // console.log(str_result);
+                        engine.analyze(str_result);
+                        engine.asignFunctionReturnValue(analyzer.sink);
+                        analyzer.analyzeArrays(engine.real_func_names, engine.real_func_call, engine.real_variable_const, engine.real_variable_var, engine.real_variable_obj, engine.startScope, engine.endScope, code, res);
+                        // console.log(res);
+                        res.end();
+                    });
+                });
+            break;
+            case '/result':
+                if (req.method == 'POST') {
+                    var fullBody = '';
+                    req.on('data', function (chunk) {
+                        fullBody += chunk.toString();
 
-app.use(express.static('public'));
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(multer({ dest: '/tmp/'}).any());
 
-/*'file' this should be key  from HTTP client
-curl -X POST -F "file=@test.js" -F "file=@test.js" http://localhost:8081/upload/
-* */
+                    });
 
-app.post('/upload', function (request, response) {
-    var filePath = __dirname + "/" + request.files[0].filename;
+                    req.on('end', function () {
+                        console.log(fullBody);
 
-    fs.readFile( request.files[0].path, function (err, data) {
-        if (err) {
-            console.log("Error On Reading file %s", request.files[0].path);
-            console.log(err);
-            return;
+                        res.writeHead(200, "OK", {
+                            'Content-Type': 'application/json'
+                        });
+                        var decodedBody = querystring.parse(fullBody);
+                        var code = decodedBody.editor;
+                        var options = {
+                            loc: true,
+                            comment: false,
+                            raw: false,
+                            range: false,
+                            tolerant: false
+                        };
+
+
+                        var result = esprima.parse(code, options);
+                        var str_result = JSON.stringify(result, null, 4);
+                        // console.log(str_result);
+                        engine.analyze(str_result);
+                        engine.asignFunctionReturnValue(analyzer.sink);
+                        analyzer.analyzeArrays(engine.real_func_names, engine.real_func_call, engine.real_variable_const, engine.real_variable_var, engine.real_variable_obj, engine.startScope, engine.endScope, code, res);
+                        // console.log(res);
+                        res.end();
+                    });
+                }
+                break;
         }
-
-        fs.writeFile(filePath, data, function (err) {
-            if( err ){
-                console.log("Error on writing file at path : %s", filePath);
-                console.log( err );
-                response = {
-                    message:'Error Happened',
-                    error:err
-                };
-
-                response.end( JSON.stringify( response ) );
-                return;
-            }
-
-
-            try {
-                checkJsPrime(filePath, response);
-            } catch (err) {
-                console.log(err);
-            } finally {
-                removeFileSync(filePath);
-            }
-        });
-    });
-})
-
-
-function removeFileSync(filePath) {
-    const fs = require('fs');
-
-    fs.unlinkSync(filePath);
-    console.log('successfully deleted %s', filePath);
-}
-
-function readFileSync(filePath) {
-    var fileString = fs.readFileSync(filePath, "utf8");
-    return fileString;
-}
-
-function checkJsPrime(filePath, response) {
-    var fileContent = readFileSync(filePath);
-
-    var source = [
-        fileContent
-    ];
-    var options = {
-        undef: true,
-        /*'-W100': true,
-        '-W097': true*/
-    };
-    var predef = {
-        foo: false
-    };
-
-
-    var result = esprima.parse(code, options);
-    var str_result = JSON.stringify(result, null, 4);
-    engine.analyze(str_result);
-    engine.asignFunctionReturnValue(analyzer.sink);
-    var jsprime_res = analyzer.analyzeArrays(engine.real_func_names, engine.real_func_call, engine.real_variable_const, engine.real_variable_var, engine.real_variable_obj, engine.startScope, engine.endScope, code, res);
-    var respObj = {
-        status : 'error',
-        tool : 'jsprime',
-        error  : jsprime_res
-    };
-    response.end( JSON.stringify(respObj));
-
-}
-
-var server = app.listen(8088, function () {
-    console.log("Server started");
-    console.log(server.address());
-})
+    }).listen(8888);
+});
