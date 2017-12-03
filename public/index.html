@@ -48,7 +48,6 @@
             var finalJson = {};
 
             $.each(formatedResult.jslint, function(k, v) {
-                console.log(k);
                 finalJson[k] = {};
                 finalJson[k].count = 1;
                 finalJson[k].tools = ['jslint'];
@@ -73,6 +72,7 @@
             });
 
             $('.accumulated').jsonViewer(finalJson, {collapsed: true, withQuotes: true});
+            $('.acc-container').removeClass('hide');
         }
 
         $(document).ready(function(){
@@ -194,7 +194,7 @@
     </script>
 
     <style>
-        .results-container .resultsCls.hide {
+        .results-container .resultsCls.hide, .acc-container.hide {
             display: none;
         }
     </style>
@@ -207,8 +207,13 @@
 
     <pre><code class="js"></code></pre>
 
-    <pre id="json-renderer"><code class="js-lint"></code><code class="js-hint"></code><code class="es-lint"></code><code class="accumulated"></code></pre>
+    <pre id="json-renderer"><code cluass="js-lint"></code><code class="js-hint"></code><code class="es-lint"></code><code class="accumulated"></code></pre>
 
+</div>
+
+<div class="acc-container hide">
+    <span>Accumulated Result</span>
+    <pre id="json-renderer1"><code class="accumulated"></code></pre>
 </div>
 <div class="results-container">
     <span>
