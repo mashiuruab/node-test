@@ -120,20 +120,20 @@ function writeResult() {
 
 
 
-    res.write("{\n");
+     res.write("{");
 
-    res.write("\"sourceData\":{\n");
-    for (var i = 0; i < sourceData.length; i++) {
-        // res.write((i + 1) + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" + sourceData[i] + "</br>");
-        if (i === sourceData.length - 1){
-            res.write("\"" + String(i+1) + "\":\"" + replaceNewLines(sourceData[i]) + "\"")
-        } else{
-            res.write("\"" + String(i+1) + "\":\"" + replaceNewLines(sourceData[i]) + "\",")
-        }
+    // res.write("\"sourceData\":{\n");
+    // for (var i = 0; i < sourceData.length; i++) {
+    //     // res.write((i + 1) + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" + sourceData[i] + "</br>");
+    //     if (i === sourceData.length - 1){
+    //         res.write("\"" + String(i+1) + "\":\"" + replaceNewLines(sourceData[i]) + "\"")
+    //     } else{
+    //         res.write("\"" + String(i+1) + "\":\"" + replaceNewLines(sourceData[i]) + "\",")
+    //     }
 
-    }
-    res.write("},\n");
-    res.write("\"badThings\":\n");
+    // }
+    // res.write("},\n");
+    res.write("\"badThings\":");
 
     var counter = 0;
 
@@ -153,7 +153,7 @@ function writeResult() {
     // res.write("}\n");
     res.write(JSON.stringify(bad_things))
     res.write("}");
-    console.log(bad_things);
+    //console.log(bad_things);
 
 }
 
