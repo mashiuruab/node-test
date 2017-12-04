@@ -7,6 +7,8 @@ real_variable_obj = [];
 var startScope = [];
 var endScope = [];
 
+var sinkWithConstantParam = ["eval","globalEval"];
+
 
 options = {
   loc: true,
