@@ -18,9 +18,9 @@ fs.readFile('./test.html', function (err, html) {
 
         switch (req.url) {
             case '/':
-                res.writeHeader(200, {
-                    "Content-Type": "text/html"
-                });
+                // res.writeHeader(200, {
+                //     "Content-Type": "text/html"
+                // });
                 // res.write(html);
                 res.writeHead(200, {'Content-Type': 'text/html'});
                 res.write('<form action="fileupload" method="post" enctype="multipart/form-data">');
