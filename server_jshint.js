@@ -49,12 +49,18 @@ app.post('/upload', function (request, response) {
 
 
             try {
-                var input = fs.createReadStream(filePath);
+                var input = readFileSync(filePath);
                 readLines(input, response, checkJsHint);
             } catch (err) {
+                console.log("Error here caught>>>>>>>>>")
                 console.log(err);
             } finally {
-                removeFileSync(filePath);
+                try {
+                    removeFileSync(filePath);
+                } catch (err) {
+                    console.log("Error here in  finally block >>>>>>>>>")
+                    console.log(err);
+                }
             }
         });
     });
@@ -78,23 +84,18 @@ function readLines(input, response, callback) {
     var remaining = '';
     var source = [];
 
-    input.on('data', function(data) {
-        remaining += data;
-        var index = remaining.indexOf('\n');
-        while (index > -1) {
-            var line = remaining.substring(0, index);
-            remaining = remaining.substring(index + 1);
-            source.push(line);
-            index = remaining.indexOf('\n');
-        }
-    });
+    remaining += input;
+    var index = remaining.indexOf('\n');
+    while (index > -1) {
+        var line = remaining.substring(0, index);
+        remaining = remaining.substring(index + 1);
+        source.push(line);
+        index = remaining.indexOf('\n');
+    }
 
-    input.on('end', function() {
-        if (remaining.length > 0) {
-            source.push(remaining);
-        }
-        callback(source, response);
-    });
+    source.push(remaining);
+
+    callback(source, response);
 }
 
 function checkJsHint(source, response) {
