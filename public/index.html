@@ -84,6 +84,20 @@
                 }
             });
 
+            $.each(formatedResult.jsprime, function(k, v) {
+                if(finalJson[k]) {
+                    finalJson[k].count = finalJson[k].count + 1;
+                    finalJson[k].tools.push('jsprime');
+                    finalJson[k].details.jsprime = v;
+                } else {
+                    finalJson[k] = {};
+                    finalJson[k].count = 1;
+                    finalJson[k].tools = ['jsprime'];
+                    finalJson[k].details = {};
+                    finalJson[k].details.jsprime = v;
+                }
+            });
+
             $('.accumulated').jsonViewer(finalJson, {collapsed: true, withQuotes: true});
             $('.acc-container').removeClass('hide');
         }
@@ -131,7 +145,7 @@
 
                     complete: function(data) {
                         completed++;
-                        if (completed == 3) {
+                        if (completed == 4) {
                             showAccumulatedResult();
                         }
                     }
@@ -172,7 +186,7 @@
                         $('.results-container .resultsCls').removeClass('hide');
                     }, complete: function(data) {
                         completed++;
-                        if (completed == 3) {
+                        if (completed == 4) {
                             showAccumulatedResult();
                         }
                     }
@@ -219,7 +233,48 @@
                     },
                     complete: function(data) {
                         completed++;
-                        if (completed == 3) {
+                        if (completed == 4) {
+                            showAccumulatedResult();
+                        }
+                    }
+                });
+
+
+
+                var  objForDataForJsPrime =  new FormData();
+                objForDataForJsPrime.append('filetoupload', objFile);
+
+                $.ajax({
+                    /*jslint*/
+                    url: 'http://localhost:8888/fileupload',
+                    type: 'POST',
+                    contentType: false,
+                    data: objForDataForJsPrime,
+                    //JQUERY CONVERT THE FILES ARRAYS INTO STRINGS.SO processData:false
+                    processData: false,
+                    success: function(data) {
+                        console.log('jsprime  result  from  server');
+                        console.log(data);
+
+                        var jsprimeResult = {};
+
+                        var map = data.badThings;
+
+                        $.each(map, function (key, value) {
+                            jsprimeResult[key] = value;
+                        });
+
+                        formatedResult.jsprime = jsprimeResult;
+
+
+                        results.push(data);
+
+                        $('.js-prime').jsonViewer(data, {collapsed: true, withQuotes: true});
+                        $('.results-container .resultsCls').removeClass('hide');
+                    },
+                    complete: function(data) {
+                        completed++;
+                        if (completed == 4) {
                             showAccumulatedResult();
                         }
                     }
@@ -244,7 +299,7 @@
 
     <pre><code class="js"></code></pre>
 
-    <pre id="json-renderer"><code class="js-lint"></code><code class="js-hint"></code><code class="es-lint"></code></pre>
+    <pre id="json-renderer"><code class="js-lint"></code><code class="js-hint"></code><code class="es-lint"></code><code class="js-prime"></code> </pre>
 
 </div>
 

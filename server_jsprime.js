@@ -14,6 +14,8 @@ fs.readFile('./test.html', function (err, html) {
     }
     http.createServer(function (req, res) {
 
+        res.setHeader("Access-Control-Allow-Origin", "*");
+
         switch (req.url) {
             case '/':
                 res.writeHeader(200, {
