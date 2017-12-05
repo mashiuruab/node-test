@@ -127,7 +127,7 @@
                             for(var i = 0; i < dataObj.error.length; ++i)
                             {
                                 if (jsLintResult[dataObj.error[i].line]) {
-                                    var prev = jsLintResult[dataObj.error[i].line + 1];
+                                    var prev = jsLintResult[dataObj.error[i].line];
                                     jsLintResult[dataObj.error[i].line + 1] = prev + ',' + dataObj.error[i].message;
                                 } else {
                                     jsLintResult[dataObj.error[i].line + 1] = dataObj.error[i].message;
