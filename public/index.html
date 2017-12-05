@@ -205,11 +205,11 @@
 
                         var esLintResult = {};
 
-                        if (dataObj.result && dataObj.result.results) {
+                        if (dataObj.error && dataObj.error.results) {
 
-                            for(var iCounter = 0; iCounter < dataObj.result.results.length; ++iCounter)
+                            for(var iCounter = 0; iCounter < dataObj.error.results.length; ++iCounter)
                             {
-                                var messages = dataObj.result.results[iCounter].messages;
+                                var messages = dataObj.error.results[iCounter].messages;
                                 for(var jCounter = 0; jCounter < messages.length; jCounter++) {
                                     if (esLintResult[messages[jCounter].line]) {
                                         var prev =  esLintResult[messages[jCounter].line];
@@ -222,7 +222,8 @@
 
                             }
 
-                            formatedResult['eslint'] = esLintResult;
+                            //formatedResult['eslint'] = esLintResult;
+                            formatedResult.eslint = esLintResult;
 
                         }
 
