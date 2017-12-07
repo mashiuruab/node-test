@@ -8,6 +8,7 @@ var startScope = [];
 var endScope = [];
 
 var sinkWithConstantParam = ["eval","globalEval"];
+var convertedFunction = [];
 
 
 options = {
