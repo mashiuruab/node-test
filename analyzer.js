@@ -272,6 +272,7 @@ function removeUnusedSource() {
     var sinkObj = sourceList[i].split("#line#");
     line = sinkObj[1];
     for (var j = 0; j < sinkResultArguments.length; j++) {
+      if(sinkResultArguments[j]){
       var aVal = sinkResultArguments[j].split(".");
       var sinkVal = "";
       for (var k = 0; k < aVal.length; k++) {
@@ -308,13 +309,14 @@ function removeUnusedSource() {
           }
         }
       }
+
     }
     if (isSink == false) {
       doHighlight("BurlyWood", line);
     }
   }
 }
-
+}
 function checkAsignValue(obj, source, actualSource, sourceObj) {
   for (var i = 0; i < obj.length; i++) {
     if (obj[i].value != undefined) {
